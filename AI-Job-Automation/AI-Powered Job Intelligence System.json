@@ -1,0 +1,448 @@
+{
+  "name": "AI-Powered Job Intelligence System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Triggers when new job alert emails arrive in Gmail inbox",
+        "height": 112,
+        "width": 272,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "fb2b9b2f-7359-46da-9d72-92b16f56a1ab",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Send AI output to Python API to clean and structure data",
+        "height": 112,
+        "width": 256,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "9d0411ec-d76f-43d5-9bb4-7baf75833acb",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Fetch full email content (subject, sender, body)",
+        "height": 112,
+        "width": 256,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "8ee469a6-c4d9-45f7-a01a-b8c9c85e8923",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "AI extracts job details like title, company, skills from email",
+        "height": 112,
+        "width": 304,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "20d99197-01be-4379-bac9-b952fb744fb2",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Store structured job data into Google Sheet",
+        "height": 112,
+        "width": 256,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        912,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "b9ea0355-f1fa-4a05-ad2d-212240d7b3e1",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ],
+          "q": "subject:(\"job alert\" OR \"new job\" OR \"recommended jobs\" OR \"hiring\")"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        -48
+      ],
+      "id": "6052f5dc-ed84-411a-989c-16f5fa2ddd55",
+      "name": "📩 Fetch Job Emails",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4tuYpfrh320Nd9DV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{$json.id}}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        -48
+      ],
+      "id": "d07c552c-6388-4665-9ab6-bafa62b33d58",
+      "name": "📨 Get Email Details",
+      "webhookId": "4773af91-2546-419c-b22c-3729eb054ba6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4tuYpfrh320Nd9DV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a strict JSON extraction assistant.\n\nYour job is to extract job details from a job alert email.\n\nIMPORTANT RULES:\n- Return ONLY JSON\n- Do NOT explain anything\n- Do NOT ask questions\n- Do NOT generate email\n- Do NOT add text before or after JSON\n\nEmail Subject:\n{{ $('📨 Get Email Details').first().json.headers.subject }}\n\nEmail From:\n{{ $('📨 Get Email Details').first().json.headers.from }}\n\nEmail Body:\n{{ $('📨 Get Email Details').first().json.text }}\n\nExtract these fields:\n\nReturn JSON:\n{\n  \"job_title\": \"\",\n  \"company\": \"\",\n  \"location\": \"\",\n  \"job_link\": \"\",\n  \"experience_required\": \"\",\n  \"skills_found\": [],\n  \"matched_skills\": [],\n  \"missing_skills\": [],\n  \"relevance_score\": \"\",\n  \"apply_decision\": \"\",\n  \"reason\": \"\"\n}\nRules:\n- If multiple jobs exist, pick the BEST matching job\n- Extract company name correctly\n- If location says Bengaluru or India, use that\n- If job link is not found, leave empty\n- Infer skills if mentioned\n- Score relevance based on this profile:\n\nProfile:\nPython, FastAPI, GenAI, Agentic AI, RAG, LLM, Azure OpenAI\n\nScoring:\n8-10 = strong match  \n5-7 = medium  \n1-4 = weak  \n\nDecision:\nApply / Maybe / Skip\n\nMy Profile Skills:\nPython, PowerShell, FastAPI, GenAI, Agentic AI, RAG, LLM, Azure OpenAI\n\nRules:\n- matched_skills → skills from job that match my profile\n- missing_skills → important job skills not in my profile"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        -48
+      ],
+      "id": "1f1d6b25-fdc4-4120-8256-dac9d43e9818",
+      "name": "🧠 Extract Job Data (AI)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ldn6gwayomrHdBPT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/parse-job",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{$json.content}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        -48
+      ],
+      "id": "4402c93f-287e-4a68-8784-7e377200334b",
+      "name": "🐍 Process Data (Python API)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "16wNHmV1MGE4cv1vYR7GdGEBbEwesOC46VtiWO0yDnEk",
+          "mode": "list",
+          "cachedResultName": "Job Alerts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16wNHmV1MGE4cv1vYR7GdGEBbEwesOC46VtiWO0yDnEk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1387752220,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16wNHmV1MGE4cv1vYR7GdGEBbEwesOC46VtiWO0yDnEk/edit#gid=1387752220"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{$json.date}}",
+            "Job Title": "={{$json.job_title}}",
+            "Company": "={{$json.company}}",
+            "Location": "={{$json.location}}",
+            "Job Link": "={{$json.job_link}}",
+            "Experience Required": "={{$json.experience_required}}",
+            "Skills Found": "={{$json.skills_found}}",
+            "Relevance Score": "={{$json.relevance_score}}",
+            "Apply Decision": "={{$json.apply_decision}}",
+            "Reason": "={{$json.reason}}",
+            "Status": "= {{$json.status}}",
+            "Matched Skills": "={{$json.matched_skills}}",
+            "Missing Skills": "={{$json.missing_skills}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Link",
+              "displayName": "Job Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Experience Required",
+              "displayName": "Experience Required",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skills Found",
+              "displayName": "Skills Found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Relevance Score",
+              "displayName": "Relevance Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Apply Decision",
+              "displayName": "Apply Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matched Skills",
+              "displayName": "Matched Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Skills",
+              "displayName": "Missing Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        992,
+        -48
+      ],
+      "id": "f2196373-0b28-4765-8833-529fd18487a3",
+      "name": "📊 Save Job to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lCflqsDLL7pEBpw0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Fetch job emails → extract with AI → process via Python → store in Google Sheets",
+        "height": 80,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "d4246609-7580-498a-b9fe-35e192a3ea21",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "📩 Fetch Job Emails": {
+      "main": [
+        [
+          {
+            "node": "📨 Get Email Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📨 Get Email Details": {
+      "main": [
+        [
+          {
+            "node": "🧠 Extract Job Data (AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Extract Job Data (AI)": {
+      "main": [
+        [
+          {
+            "node": "🐍 Process Data (Python API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🐍 Process Data (Python API)": {
+      "main": [
+        [
+          {
+            "node": "📊 Save Job to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Save Job to Sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6153e54d-789b-45dc-b517-591131ca23f3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "87c620ea2b9d4be5c68eab34c15dd70c1732e9c9e552a5e68648339cc8d95c13"
+  },
+  "id": "dKyS01N93QSGR2uP",
+  "tags": []
+}
