@@ -1,15 +1,15 @@
-# 🚀 AI Job Automation System
+#  AI Job Automation System
 
 An end-to-end AI-powered workflow that automatically processes job alerts and organizes them intelligently.
 
-## 🔹 Features
+##  Features
 - Reads job emails from Gmail
 - Extracts job details using AI (Gemini)
 - Processes data using FastAPI (Python)
 - Scores job relevance
 - Stores structured data in Google Sheets
 
-## 🔹 Tech Stack
+##  Tech Stack
 - n8n
 - Google Gemini
 - FastAPI
@@ -17,10 +17,10 @@ An end-to-end AI-powered workflow that automatically processes job alerts and or
 - Gmail API
 - Google Sheets
 
-## 🔹 Workflow
+##  Workflow
 Gmail → AI Extraction → Python API → Google Sheets
 
-## 🔹 Setup
+##  Setup
 
 ### 1. Run FastAPI
 ```bash
